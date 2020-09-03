@@ -1,12 +1,12 @@
 def aws_region_var = ''
 
-if(env.BRANCH_NAME ==~ "^dev.*$"){
+if(env.BRANCH_NAME ==~ "dev.*"){
     aws_region_var = "us-east-1"
 }
-else if(env.BRANCH_NAME ==~ "^qa.*$"){
+else if(env.BRANCH_NAME ==~ "qa.*"){
     aws_region_var = "us-east-2"
 }
-else if(env.BRANCH_NAME ==~ "^master$"){
+else if(env.BRANCH_NAME ==~ "master"){
     aws_region_var = "us-west-2"
 }
 
