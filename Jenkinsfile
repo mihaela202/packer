@@ -9,17 +9,19 @@ else if(env.BRANCH_NAME ==~ "qa.*"){
 else if(env.BRANCH_NAME ==~ "master"){
     aws_region_var = "us-west-2"
 }
-
-println(env.BRANCH_NAME)
-println(aws_region_var)
+else {
+    error("Branch Name Doesnt Match RegEx")
+}
 
 node {
     stage('Pull Repo') {
         checkout scm
     }
 
+    def ami_name = "apache-${UUID.randomUUID().toString()}"
+
     withCredentials([usernamePassword(credentialsId: 'jenkins-aws-access-key', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-        withEnv(["AWS_REGION=${aws_region_var}", "PACKER_AMI_NAME=apache-${UUID.randomUUID().toString()}"]) {
+        withEnv(["AWS_REGION=${aws_region_var}", "PACKER_AMI_NAME=${ami_name}"]) {
             stage('Packer Validate') {
                 sh 'packer validate apache.json'
             }
@@ -27,7 +29,15 @@ node {
             stage('Packer Build') {
                 sh 'packer build apache.json'
             }
+
+            stage('Create an instance') {
+                build job: 'terraform-ec2', parameters: [
+                    booleanParam(name: 'terraform_apply', value: true),
+                    booleanParam(name: 'terraform_destroy', value: false),
+                    string(name: 'environment', value: "${env.BRANCH_NAME}"),
+                    string(name: 'ami_name', value: "${ami_name}")
+                    ]
+            }
         }  
     }
 }
-
