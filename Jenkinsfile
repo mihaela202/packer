@@ -27,11 +27,13 @@ node {
             }
 
             stage('Packer Build') {
-                sh 'packer build apache.json'
+                // sh 'packer build apache.json'                
             }
 
             stage('Create an instance') {
-                build job: 'terraform-ec2', parameters: [
+                ami_name = "apache-0be37ffe-6bd7-45f4-83f0-fbfb40461045"
+                
+                build job: 'terraform-ec2-by-ami-name', parameters: [
                     booleanParam(name: 'terraform_apply', value: true),
                     booleanParam(name: 'terraform_destroy', value: false),
                     string(name: 'environment', value: "${env.BRANCH_NAME}"),
